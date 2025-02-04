@@ -89,7 +89,7 @@ class MatrixOperations
             for (int j = 0; j < size; j++)
             {
                 double[,] minor = getMinorMatrix(matrix, i, j);
-                comatrix[i, j] = Math.Pow(-1, i + j) * deter(minor); // IDK WHY BUT WE DO NOT NEED TO MULTIPLY BY ELEMENT HIMSELF
+                comatrix[i, j] = Math.Pow(-1, i + j) * deter(minor); // IDK WHY BUT WE DO NOT NEED TO MULTIPLY BY ELEMENT HIMSELF -> because it's comatrix calcul
             }
         }
 
@@ -211,7 +211,7 @@ class MatrixOperations
     public double[] moment(double[] force, double[] applicationVector, double[] inertieCenter)
     {
         double[] agVec = subVect(inertieCenter, applicationVector);
-
+        //Console.WriteLine(agVec[0] + " /" + agVec[1] + " /" + agVec[2]);
 
         double[] moment = prodVect(agVec, force);
 
@@ -225,12 +225,18 @@ class MatrixOperations
     {
         MatrixOperations matrixOperations = new MatrixOperations();
 
+        double[] force = { 2, 3, 4 };
+        double[] applicationVector = { 1, 1, 1 };
+        double[] inertieCenter = { 3, 3, 3 };
+
+        double[] resultat = matrixOperations.moment(force, applicationVector, inertieCenter);
+
         //double[] A = { 1, 2, 3 };
         //double[] B = { 4, 5, 6 };
 
         //double[] resultat = matrixOperations.prodVect(A, B);
 
-        //Console.WriteLine(resultat[0] + " /" + resultat[1] + " /" + resultat[2]);
+        Console.WriteLine(resultat[0] + " /" + resultat[1] + " /" + resultat[2]);
 
         //double[,] matrix1 = new double[2, 3]
         //{
