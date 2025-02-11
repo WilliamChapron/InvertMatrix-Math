@@ -314,8 +314,6 @@ class MatrixOperations
 
     public void rotation(double h, double[,] forces, double[,] applicationPoints, double[] inertieCenter, double[,] inertieMatrix, ref double[] rotAngle, ref double[] rotSpeed)
     {
-        Console.WriteLine("Début de la fonction de rotation");
-
         // Sum forces moment
         double[] totalMoment = new double[3];
         for (int i = 0; i < forces.GetLength(0); i++)
@@ -323,37 +321,27 @@ class MatrixOperations
             double[] force = { forces[i, 0], forces[i, 1], forces[i, 2] };
             double[] applicationPoint = { applicationPoints[i, 0], applicationPoints[i, 1], applicationPoints[i, 2] };
 
-            Console.WriteLine($"Force {i}: {string.Join(", ", force)}");
-            Console.WriteLine($"Point d'application {i}: {string.Join(", ", applicationPoint)}");
-
             double[] moment = momentF(force, applicationPoint, inertieCenter);
-            Console.WriteLine($"Moment calculé pour la force {i}: {string.Join(", ", moment)}");
 
             totalMoment = addVect(totalMoment, moment);
-            Console.WriteLine($"Total Moment après ajout: {string.Join(", ", totalMoment)}");
         }
 
         // sum of moment = I * Ω/ω -> Ω (angular acceleration = I-1 * sum of moment)
         double[,] matrixInverse = inverse(inertieMatrix);
-        Console.WriteLine("Matrice d'inertie inverse: ");
-        PrintMatrix(matrixInverse);
 
         double[] Ω = multiplyMatrixVector(matrixInverse, totalMoment);
-        Console.WriteLine($"Accélération angulaire (Ω): {string.Join(", ", Ω)}");
 
         double[] newRotSpeed = {
-        solve1(rotSpeed[0], Ω[0], h),
-        solve1(rotSpeed[1], Ω[1], h),
-        solve1(rotSpeed[2], Ω[2], h),
-    };
-        Console.WriteLine($"Vitesse angulaire calculée (nouvelle vitesse): {string.Join(", ", newRotSpeed)}");
+            solve1(rotSpeed[0], Ω[0], h),
+            solve1(rotSpeed[1], Ω[1], h),
+            solve1(rotSpeed[2], Ω[2], h),
+        };
 
         double[] newRotAngle = {
-        solve1(rotAngle[0], newRotSpeed[0], h),
-        solve1(rotAngle[1], newRotSpeed[1], h),
-        solve1(rotAngle[2], newRotSpeed[2], h),
-    };
-        Console.WriteLine($"Angle de rotation calculé (nouvel angle): {string.Join(", ", newRotAngle)}");
+            solve1(rotAngle[0], newRotSpeed[0], h),
+            solve1(rotAngle[1], newRotSpeed[1], h),
+            solve1(rotAngle[2], newRotSpeed[2], h),
+        };
 
         rotSpeed[0] = newRotSpeed[0];
         rotSpeed[1] = newRotSpeed[1];
@@ -362,8 +350,6 @@ class MatrixOperations
         rotAngle[0] = newRotAngle[0];
         rotAngle[1] = newRotAngle[1];
         rotAngle[2] = newRotAngle[2];
-
-        Console.WriteLine("Fin de la fonction de rotation");
     }
 
     private void PrintMatrix(double[,] matrix)
@@ -383,27 +369,29 @@ class MatrixOperations
     {
         MatrixOperations matrixOperations = new MatrixOperations();
 
-        double[,] forces = {
-            {0, 100, 0},   
-            {0, 0, 0},     
-            {0, 0, 0}      
-        };
-        double[,] applicationPoints = {
-            {1, 0, 0},     
-            {0, 0, 0},     
-            {0, 0, 0}     
-        };
-        double[] inertieCenter = { 0, 0, 0 };  
-        double[,] inertieMatrix = {
-            {1, 0, 0},
-            {0, 1, 0},
-            {0, 0, 1}     
-        };
-        double[] rotSpeed = { 0, 0, 0 }; 
-        double[] rotAngle = { 0, 0, 0 }; 
-        double h = 0.1;  
 
-        matrixOperations.rotation(h, forces, applicationPoints, inertieCenter, inertieMatrix, ref rotAngle, ref rotSpeed);
+
+        //double[,] forces = {
+        //    {0, 100, 0},   
+        //    {0, 0, 0},     
+        //    {0, 0, 0}      
+        //};
+        //double[,] applicationPoints = {
+        //    {1, 0, 0},     
+        //    {0, 0, 0},     
+        //    {0, 0, 0}     
+        //};
+        //double[] inertieCenter = { 0, 0, 0 };  
+        //double[,] inertieMatrix = {
+        //    {1, 0, 0},
+        //    {0, 1, 0},
+        //    {0, 0, 1}     
+        //};
+        //double[] rotSpeed = { 0, 0, 0 }; 
+        //double[] rotAngle = { 0, 0, 0 }; 
+        //double h = 0.1;  
+
+        //matrixOperations.rotation(h, forces, applicationPoints, inertieCenter, inertieMatrix, ref rotAngle, ref rotSpeed);
 
         //double m = 2.0;
         //double h = 0.1;
