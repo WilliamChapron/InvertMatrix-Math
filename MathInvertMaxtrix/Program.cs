@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Drawing;
+using System.Numerics;
 
 
 class MatrixOperations
 {
+
+
+    // TP 1
+
+    
     // Take a base matrix, and remove a line and a column from specified, used in determinant calculation
     public double[,] getMinorMatrix(double[,] matrix, int removedI, int removedJ)
     {
@@ -187,6 +193,22 @@ class MatrixOperations
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // TP 2
     public double[] prodVect(double[] vect1, double[] vect2)
     {
         double[] finalVect = new double[3];
@@ -195,6 +217,18 @@ class MatrixOperations
         finalVect[2] = vect1[0] * vect2[1] - vect1[1] * vect2[0];
 
         return finalVect;
+    }
+
+    public double[] addVect(double[] vect1, double[] vect2)
+    {
+
+        double[] addVec = new double[3];
+        for (int i = 0; i < 3; i++)
+        {
+            addVec[i] = vect1[i] + vect2[i];
+        }
+
+        return addVec;
     }
 
     public double[] subVect(double[] vect1, double[] vect2)
@@ -208,15 +242,139 @@ class MatrixOperations
         return subVec;
     }
 
-    public double[] moment(double[] force, double[] applicationVector, double[] inertieCenter)
+    public double[] momentF(double[] force, double[] applicationPoint, double[] inertieCenter)
     {
-        double[] agVec = subVect(inertieCenter, applicationVector);
-        //Console.WriteLine(agVec[0] + " /" + agVec[1] + " /" + agVec[2]);
+        // Calcul du vecteur agVec (distance entre le centre d'inertie et le point d'application de la force)
+        double[] agVec = subVect(inertieCenter, applicationPoint);
 
+        // Affichage du vecteur agVec pour débogage
+        Console.WriteLine($"Vecteur agVec (inertieCenter - applicationPoint): {string.Join(", ", agVec)}");
+
+        // Calcul du moment en utilisant le produit vectoriel
         double[] moment = prodVect(agVec, force);
+
+        // Affichage du moment calculé pour débogage
+        Console.WriteLine($"Moment (Produit vectoriel agVec x force): {string.Join(", ", moment)}");
 
         return moment;
     }
+
+    public double solve1(double f, double fp, double h)
+    {
+        return f + fp * h;
+    }
+
+
+    public void translation(double m, double h, double[] forceSum, ref double[] pos, ref double[] speed)
+    {
+        double[] acceleration = { forceSum[0] / m, forceSum[1] / m, forceSum[2] / m };
+
+        double[] newSpeed = {
+            solve1(speed[0], acceleration[0], h),
+            solve1(speed[1], acceleration[1], h),
+            solve1(speed[2], acceleration[2], h),
+        };
+
+        double[] newPosition = {
+            solve1(pos[0], newSpeed[0], h),
+            solve1(pos[1], newSpeed[1], h),
+            solve1(pos[2], newSpeed[2], h),
+        };
+
+        // set ref
+        for (int i = 0; i < 3; i++)
+        {
+            speed[i] = newSpeed[i];
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            pos[i] = newPosition[i];
+        }
+    }
+    public double[] multiplyMatrixVector(double[,] matrix, double[] vector)
+    {
+
+        int rows = matrix.GetLength(0);
+        int cols = matrix.GetLength(1); 
+
+        double[] result = new double[rows]; 
+
+        for (int i = 0; i < rows; i++)
+        {
+            double sum = 0.0;
+            for (int j = 0; j < cols; j++)
+            {
+                sum += matrix[i, j] * vector[j]; 
+            }
+            result[i] = sum; 
+        }
+
+        return result;
+    }
+
+    public void rotation(double h, double[,] forces, double[,] applicationPoints, double[] inertieCenter, double[,] inertieMatrix, ref double[] rotAngle, ref double[] rotSpeed)
+    {
+        Console.WriteLine("Début de la fonction de rotation");
+
+        // Sum forces moment
+        double[] totalMoment = new double[3];
+        for (int i = 0; i < forces.GetLength(0); i++)
+        {
+            double[] force = { forces[i, 0], forces[i, 1], forces[i, 2] };
+            double[] applicationPoint = { applicationPoints[i, 0], applicationPoints[i, 1], applicationPoints[i, 2] };
+
+            Console.WriteLine($"Force {i}: {string.Join(", ", force)}");
+            Console.WriteLine($"Point d'application {i}: {string.Join(", ", applicationPoint)}");
+
+            double[] moment = momentF(force, applicationPoint, inertieCenter);
+            Console.WriteLine($"Moment calculé pour la force {i}: {string.Join(", ", moment)}");
+
+            totalMoment = addVect(totalMoment, moment);
+            Console.WriteLine($"Total Moment après ajout: {string.Join(", ", totalMoment)}");
+        }
+
+        // sum of moment = I * Ω/ω -> Ω (angular acceleration = I-1 * sum of moment)
+        double[,] matrixInverse = inverse(inertieMatrix);
+        Console.WriteLine("Matrice d'inertie inverse: ");
+        PrintMatrix(matrixInverse);
+
+        double[] Ω = multiplyMatrixVector(matrixInverse, totalMoment);
+        Console.WriteLine($"Accélération angulaire (Ω): {string.Join(", ", Ω)}");
+
+        double[] newRotSpeed = {
+        solve1(rotSpeed[0], Ω[0], h),
+        solve1(rotSpeed[1], Ω[1], h),
+        solve1(rotSpeed[2], Ω[2], h),
+    };
+        Console.WriteLine($"Vitesse angulaire calculée (nouvelle vitesse): {string.Join(", ", newRotSpeed)}");
+
+        double[] newRotAngle = {
+        solve1(rotAngle[0], newRotSpeed[0], h),
+        solve1(rotAngle[1], newRotSpeed[1], h),
+        solve1(rotAngle[2], newRotSpeed[2], h),
+    };
+        Console.WriteLine($"Angle de rotation calculé (nouvel angle): {string.Join(", ", newRotAngle)}");
+
+        rotSpeed[0] = newRotSpeed[0];
+        rotSpeed[1] = newRotSpeed[1];
+        rotSpeed[2] = newRotSpeed[2];
+
+        rotAngle[0] = newRotAngle[0];
+        rotAngle[1] = newRotAngle[1];
+        rotAngle[2] = newRotAngle[2];
+
+        Console.WriteLine("Fin de la fonction de rotation");
+    }
+
+    private void PrintMatrix(double[,] matrix)
+    {
+        for (int i = 0; i < matrix.GetLength(0); i++)
+        {
+            Console.WriteLine($"[{matrix[i, 0]}, {matrix[i, 1]}, {matrix[i, 2]}]");
+        }
+    }
+
+
 }
 
     class Program
@@ -225,18 +383,77 @@ class MatrixOperations
     {
         MatrixOperations matrixOperations = new MatrixOperations();
 
-        double[] force = { 2, 3, 4 };
-        double[] applicationVector = { 1, 1, 1 };
-        double[] inertieCenter = { 3, 3, 3 };
+        double[,] forces = {
+            {0, 100, 0},   
+            {0, 0, 0},     
+            {0, 0, 0}      
+        };
+        double[,] applicationPoints = {
+            {1, 0, 0},     
+            {0, 0, 0},     
+            {0, 0, 0}     
+        };
+        double[] inertieCenter = { 0, 0, 0 };  
+        double[,] inertieMatrix = {
+            {1, 0, 0},
+            {0, 1, 0},
+            {0, 0, 1}     
+        };
+        double[] rotSpeed = { 0, 0, 0 }; 
+        double[] rotAngle = { 0, 0, 0 }; 
+        double h = 0.1;  
 
-        double[] resultat = matrixOperations.moment(force, applicationVector, inertieCenter);
+        matrixOperations.rotation(h, forces, applicationPoints, inertieCenter, inertieMatrix, ref rotAngle, ref rotSpeed);
 
-        //double[] A = { 1, 2, 3 };
-        //double[] B = { 4, 5, 6 };
+        //double m = 2.0;
+        //double h = 0.1;
+        //double[] force = { 6.0, 0.0, 0.0 };
+        //double[] inertieCenter = { 1.0, 1.0, 0.0 };
+        //double[] position = { inertieCenter[0], inertieCenter[1], inertieCenter[2] };
+        //double[] speed = { 0.0, 0.0, 0.0 };
 
-        //double[] resultat = matrixOperations.prodVect(A, B);
 
-        Console.WriteLine(resultat[0] + " /" + resultat[1] + " /" + resultat[2]);
+        //matrixOperations.translation(m, h, force, ref position, ref speed);
+
+        //Console.WriteLine("Nouvelle position G après 1 translations :");
+        //Console.WriteLine($"  X: {position[0]:F2}");
+        //Console.WriteLine($"  Y: {position[1]:F2}");
+        //Console.WriteLine($"  Z: {position[2]:F2}");
+
+        //Console.WriteLine("\nNouvelle vitesse v après 1 translation :");
+        //Console.WriteLine($"  Vx: {speed[0]:F2}");
+        //Console.WriteLine($"  Vy: {speed[1]:F2}");
+        //Console.WriteLine($"  Vz: {speed[2]:F2}");
+
+
+
+        //matrixOperations.translation(m, h, force, ref position, ref speed);
+
+
+        //Console.WriteLine("Nouvelle position G après 2 translations :");
+        //Console.WriteLine($"  X: {position[0]:F2}");
+        //Console.WriteLine($"  Y: {position[1]:F2}");
+        //Console.WriteLine($"  Z: {position[2]:F2}");
+
+        //Console.WriteLine("\nNouvelle vitesse v après 2 translations :");
+        //Console.WriteLine($"  Vx: {speed[0]:F2}");
+        //Console.WriteLine($"  Vy: {speed[1]:F2}");
+        //Console.WriteLine($"  Vz: {speed[2]:F2}");
+
+
+
+        //double[] force = { 2, 3, 4 };
+        //double[] applicationVector = { 1, 1, 1 };
+        //double[] inertieCenter = { 3, 3, 3 };
+
+        //double[] resultat = matrixOperations.moment(force, applicationVector, inertieCenter);
+
+        ////double[] A = { 1, 2, 3 };
+        ////double[] B = { 4, 5, 6 };
+
+        ////double[] resultat = matrixOperations.prodVect(A, B);
+
+        //Console.WriteLine(resultat[0] + " /" + resultat[1] + " /" + resultat[2]);
 
         //double[,] matrix1 = new double[2, 3]
         //{
@@ -261,8 +478,6 @@ class MatrixOperations
         //    { 4, 2, 6 }
         //};
         //double[,] inverseMatrix = matrixOperations.inverse(matrix);
-
-
 
 
     }
