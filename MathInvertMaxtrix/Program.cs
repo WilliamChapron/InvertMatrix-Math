@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Numerics;
+using System.Reflection;
 
 
 class MatrixOperations
@@ -244,16 +245,12 @@ class MatrixOperations
 
     public double[] momentF(double[] force, double[] applicationPoint, double[] inertieCenter)
     {
-        // Calcul du vecteur agVec (distance entre le centre d'inertie et le point d'application de la force)
         double[] agVec = subVect(inertieCenter, applicationPoint);
 
-        // Affichage du vecteur agVec pour débogage
         Console.WriteLine($"Vecteur agVec (inertieCenter - applicationPoint): {string.Join(", ", agVec)}");
 
-        // Calcul du moment en utilisant le produit vectoriel
         double[] moment = prodVect(agVec, force);
 
-        // Affichage du moment calculé pour débogage
         Console.WriteLine($"Moment (Produit vectoriel agVec x force): {string.Join(", ", moment)}");
 
         return moment;
@@ -360,6 +357,76 @@ class MatrixOperations
         }
     }
 
+    public double[] centre_inert(double[,] points)
+    {
+        double totalMass = 0;
+        double sumX = 0, sumY = 0, sumZ = 0;
+
+        for (int i = 0; i < points.GetLength(0); i++)
+        {
+            double mass = points[i, 0];       
+            double x = points[i, 1];          
+            double y = points[i, 2];        
+            double z = points[i, 3];      
+
+            totalMass += mass;
+            sumX += x * mass;
+            sumY += y * mass;
+            sumZ += z * mass;
+        }
+
+        double centerX = sumX / totalMass;
+        double centerY = sumY / totalMass;
+        double centerZ = sumZ / totalMass;
+
+        return new double[] { centerX, centerY, centerZ };
+    }
+
+    public double[,] matrice_inert(double[,] points)
+    {
+        double[,] I = new double[3, 3];
+
+
+        double A = 0, B = 0, C = 0;
+
+        double D = 0, E = 0, F = 0;
+
+        for (int i = 0; i < points.GetLength(0); i++)
+        {
+            double x = points[i, 0];  // X
+            double y = points[i, 1];  // Y
+            double z = points[i, 2];  // Z
+            double m = points[i, 3];  // m
+
+
+            A += m * (Math.Pow(y, 2) + Math.Pow(z, 2));
+            B += m * (Math.Pow(x, 2) + Math.Pow(z, 2));  
+            C += m * (Math.Pow(x, 2) + Math.Pow(y, 2)); 
+
+            D += m * y * z;
+            E += m * x * z;
+            F += m * x * y;
+        }
+
+        // Diagonal
+        I[0, 0] = A;
+        I[1, 1] = B;
+        I[2, 2] = C;
+
+
+
+        // Non diagonal
+        I[0, 1] = -F;
+        I[1, 0] = -F;
+
+        I[0, 2] = -E;
+        I[2, 0] = -E;
+
+        I[1, 2] = -D;
+        I[2, 1] = -D;
+
+        return I;
+    }
 
 }
 
@@ -368,6 +435,8 @@ class MatrixOperations
     static void Main()
     {
         MatrixOperations matrixOperations = new MatrixOperations();
+
+
 
 
 
