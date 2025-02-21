@@ -357,17 +357,17 @@ class MatrixOperations
         }
     }
 
-    public double[] centre_inert(double[,] points)
+    public double[,] centre_inert(double[,] points)
     {
         double totalMass = 0;
         double sumX = 0, sumY = 0, sumZ = 0;
 
         for (int i = 0; i < points.GetLength(0); i++)
         {
-            double mass = points[i, 0];       
-            double x = points[i, 1];          
-            double y = points[i, 2];        
-            double z = points[i, 3];      
+            double mass = points[i, 0];
+            double x = points[i, 1];
+            double y = points[i, 2];
+            double z = points[i, 3];
 
             totalMass += mass;
             sumX += x * mass;
@@ -379,7 +379,7 @@ class MatrixOperations
         double centerY = sumY / totalMass;
         double centerZ = sumZ / totalMass;
 
-        return new double[] { centerX, centerY, centerZ };
+        return new double[,] { { centerX, centerY, centerZ } };
     }
 
     public double[,] matrice_inert(double[,] points)
@@ -425,9 +425,139 @@ class MatrixOperations
         I[1, 2] = -D;
         I[2, 1] = -D;
 
+
+
         return I;
     }
 
+    public double[,] displace_matrix(double[,] I_O, double totalMass, double[] oPoint, double[] aPoint)
+    {
+        double a = aPoint[0] - oPoint[0];
+        double b = aPoint[1] - oPoint[1];
+        double c = aPoint[2] - oPoint[2];
+
+        // final matrix (moved to A)
+        double[,] I_A = new double[3, 3];
+
+        // calculate displacement matrix adding matrix O, the both are made in same time 
+
+        // line 1
+        I_A[0, 0] = I_O[0, 0] + totalMass * (Math.Pow(b, 2) + Math.Pow(c, 2));
+        I_A[0, 1] = I_O[0, 1] - totalMass * a * b;
+        I_A[0, 2] = I_O[0, 2] - totalMass * a * c;
+
+        // line 2
+        I_A[1, 0] = I_O[1, 0] - totalMass * a * b;
+        I_A[1, 1] = I_O[1, 1] + totalMass * (Math.Pow(a, 2) + Math.Pow(c, 2));
+        I_A[1, 2] = I_O[1, 2] - totalMass * b * c;
+
+        // line 3
+        I_A[2, 0] = I_O[2, 0] - totalMass * a * c;
+        I_A[2, 1] = I_O[2, 1] - totalMass * b * c;
+        I_A[2, 2] = I_O[2, 2] + totalMass * (Math.Pow(a, 2) + Math.Pow(b, 2));
+
+        return I_A;
+    }
+
+    // TP 4
+
+    public double[,] pave_plein(int n, double a, double b, double c, double x0, double y0, double z0)
+    {
+        // approximation of number of points by direction (x,y,z)
+        int iterations = (int)Math.Pow(n, 1.0 / 3.0); 
+
+        // x,y,z lists
+        double[,] result = new double[n, 3];
+
+
+
+        // calculate offset
+        double dx = a / (iterations - 1);
+        double dy = b / (iterations - 1);
+        double dz = c / (iterations - 1);
+
+        int index = 0;
+
+        // coherent loop :)
+        for (int i = 0; i < iterations; i++)
+        {
+            for (int j = 0; j < iterations; j++)
+            {
+                for (int k = 0; k < iterations; k++)
+                {
+                    // base pos + (iteration value between 0 and "iterations" multiply by offset dx/dy or dz)
+                    result[index, 0] = x0 + i * dx;  
+                    result[index, 1] = y0 + j * dy;  
+                    result[index, 2] = z0 + k * dz;
+                    // add all variations possible of points for each axes coordinate
+
+                    index++;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public static long factoriel(int n)
+    {
+        long result = 1;
+        for (int i = 1; i <= n; i++)
+        {
+            result *= i;
+        }
+        return result;
+    }
+
+    public double ld_cosinus(double x)
+    {
+        // begin by 1
+        double result = 1;
+        // also set to 1 :)
+        double term = 1;
+
+        int n = 2;
+        int k = -1;
+
+        // Approximation until x^6 because begin x^2
+        while (n <= 6)
+        {
+            term *= k * (Math.Pow(x, n) / factoriel(n)); 
+            result += term;
+
+            // increment factoriel
+            n += 2;
+            // change sign
+            k *= -1;
+        }
+
+        return result;
+    }
+
+    public double ld_sinus(double x)
+    {
+        // begin by x
+        double result = x;
+        // also set to x :)
+        double term = x;
+
+        int n = 3;
+        int k = -1;
+
+        // Approximation until x^5 because begin x^3
+        while (n <= 5)
+        {
+            term *= k * (Math.Pow(x, n) / factoriel(n));
+            result += term;
+
+            // increment factoriel
+            n += 2;
+            // change sign
+            k *= -1;
+        }
+
+        return result;
+    }
 }
 
     class Program
@@ -436,8 +566,72 @@ class MatrixOperations
     {
         MatrixOperations matrixOperations = new MatrixOperations();
 
+        //int n = 27;
+        //double a = 3.0; 
+        //double b = 3.0; 
+        //double c = 3.0; 
+        //double x0 = 0.0; 
+        //double y0 = 0.0; 
+        //double z0 = 0.0; 
+        //double[,] points = matrixOperations.pave_plein(n, a, b, c, x0, y0, z0);
+        //for (int i = 0; i < points.GetLength(0); i++)
+        //{
+        //    Console.WriteLine($"Point {i + 1}: X = {points[i, 0]}, Y = {points[i, 1]}, Z = {points[i, 2]}");
+        //}
+
+        //double[,] I_O = new double[,] 
+        //{
+        //    { 6.0, -2.0, -1.0 },
+        //    { -2.0, 6.0, -1.0 },
+        //    { -1.0, -1.0, 9.0 }
+        //};
+        //double m = 10.0; 
+        //double[] O = { 0.0, 0.0, 0.0 }; 
+        //double[] A = { 1.0, 1.0, 1.0 };  
+
+        //double[,] I_A = matrixOperations.displace_matrix(I_O, m, O, A);
+
+        //Console.WriteLine("Matrice d'inertie déplacée :");
+        //for (int i = 0; i < 3; i++)
+        //{
+        //    for (int j = 0; j < 3; j++)
+        //    {
+        //        Console.Write(I_A[i, j] + " ");
+        //    }
+        //    Console.WriteLine();
+        //}
 
 
+
+
+        //double[,] points = new double[,]
+        //{
+        //            { 0, 0, 0, 2 },  
+        //            { 1, 0, 0, 2 },  
+        //            { 1, 1, 0, 2 },  
+        //            { 0, 1, 0, 2 },  
+        //            { 0.5, 0.5, 1, 2 }  
+        //};
+
+        //double[,] matriceInertie = matrixOperations.matrice_inert(points);
+
+
+        //Console.WriteLine("Matrice d'inertie :");
+        //Console.WriteLine($"[{matriceInertie[0, 0]} , {matriceInertie[0, 1]} , {matriceInertie[0, 2]}]");
+        //Console.WriteLine($"[{matriceInertie[1, 0]} , {matriceInertie[1, 1]} , {matriceInertie[1, 2]}]");
+        //Console.WriteLine($"[{matriceInertie[2, 0]} , {matriceInertie[2, 1]} , {matriceInertie[2, 2]}]");
+
+
+
+        //double[,] points = new double[,]
+        //{
+        //{ 1, 1, 2, 3 }, 
+        //{ 1, 2, 5, 6 },  
+        //{ 2, 3, 8, 9 }  
+        //};
+
+        //double[,] centre = matrixOperations.centre_inert(points);
+        //Console.WriteLine("Centre de masse (inertie) : X = " + centre[0, 0] + ", Y = " + centre[0, 1] + ", Z = " + centre[0, 2]);
 
 
         //double[,] forces = {
