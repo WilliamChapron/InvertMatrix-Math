@@ -510,7 +510,7 @@ class MatrixOperations
     }
 
 
-    // Wich approximation accuracy taylor  do i need use
+    // Wich approximation accuracy taylor do i need use
     public double ld_cosinus(double x)
     {
         // begin by 1
@@ -594,6 +594,44 @@ class MatrixOperations
 
         return result;
     }
+
+
+    // n for number of 2d axis point, m for nbr of z height section, compartment
+    public double[,] cylindre_plein(double R, double h, double x0, double y0, double z0, int n, int m)
+    {
+        double[,] result = new double[n * m, 3];  
+
+
+        double angleStep = 2 * Math.PI / n;
+        double zStep = h / (m - 1); // z offset
+
+        int index = 0;
+
+        // coherent loop on z
+        for (int j = 0; j < m; j++)
+        {
+            double z = z0 + j * zStep;
+
+            // xy 2d loop
+            for (int i = 0; i < n; i++)
+            {
+                double theta = i * angleStep;
+
+                // same logic than circle
+                double x = x0 + R * Math.Cos(theta);
+                double y = y0 + R * Math.Sin(theta);
+
+
+                result[index, 0] = x;
+                result[index, 1] = y;
+                result[index, 2] = z;
+
+                index++;
+            }
+        }
+
+        return result;
+    }
 }
 
     class Program
@@ -602,21 +640,37 @@ class MatrixOperations
     {
         MatrixOperations matrixOperations = new MatrixOperations();
 
- 
-        double R = 5.0;  
-        double x0 = 0.0; 
-        double y0 = 0.0; 
-        double z0 = 0.0; 
-        int n = 10;    
+        //double R = 5.0;  
+        //double h = 10.0; 
+        //double x0 = 0.0; 
+        //double y0 = 0.0; 
+        //double z0 = 0.0; 
+        //int n = 10;      
+        //int m = 5;       
 
- 
-        double[,] coordinates = matrixOperations.cercle_plein(R, x0, y0, z0, n);
+        //double[,] coordinates = matrixOperations.cylindre_plein(R, h, x0, y0, z0, n, m);
 
-        Console.WriteLine("Coordonnées du cercle plein :");
-        for (int i = 0; i < n; i++)
-        {
-            Console.WriteLine($"Point {i + 1}: X = {coordinates[i, 0]}, Y = {coordinates[i, 1]}, Z = {coordinates[i, 2]}");
-        }
+        //for (int i = 0; i < n * m; i++)
+        //{
+        //    Console.WriteLine($"Point {i + 1}: X = {coordinates[i, 0]}, Y = {coordinates[i, 1]}, Z = {coordinates[i, 2]}");
+        //}
+
+
+
+        //double R = 5.0;  
+        //double x0 = 0.0; 
+        //double y0 = 0.0; 
+        //double z0 = 0.0; 
+        //int n = 10;    
+
+
+        //double[,] coordinates = matrixOperations.cercle_plein(R, x0, y0, z0, n);
+
+        //Console.WriteLine("Coordonnées du cercle plein :");
+        //for (int i = 0; i < n; i++)
+        //{
+        //    Console.WriteLine($"Point {i + 1}: X = {coordinates[i, 0]}, Y = {coordinates[i, 1]}, Z = {coordinates[i, 2]}");
+        //}
 
         //int n = 27;
         //double a = 3.0; 
