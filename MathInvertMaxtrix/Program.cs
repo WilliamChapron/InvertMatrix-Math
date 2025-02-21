@@ -509,6 +509,8 @@ class MatrixOperations
         return result;
     }
 
+
+    // Wich approximation accuracy taylor  do i need use
     public double ld_cosinus(double x)
     {
         // begin by 1
@@ -558,6 +560,40 @@ class MatrixOperations
 
         return result;
     }
+
+    // miss n in the rule for param in the exercise 
+    public double[,] cercle_plein(double R, double x0, double y0, double z0, int n)
+    {
+        // x,y,z lists
+        double[,] result = new double[n, 3];
+
+        // 2 PI rad
+        double angleStep = 2 * Math.PI / n;
+
+        for (int i = 0; i < n; i++)
+        {
+            double theta = i * angleStep;
+
+            // doesn't work with own custom aproximations function ld_ ...
+            //double cosTheta = ld_cosinus(theta);
+            //double sinTheta = ld_sinus(theta);
+
+            // i will temporarly use native c# func that work
+            double cosTheta = Math.Cos(theta);
+            double sinTheta = Math.Sin(theta);
+
+            // cordinates (2D)
+            double x = x0 + R * cosTheta;
+            double y = y0 + R * sinTheta;
+
+            // add to array [,]
+            result[i, 0] = x;
+            result[i, 1] = y;
+            result[i, 2] = z0; // circle, not 3 axes
+        }
+
+        return result;
+    }
 }
 
     class Program
@@ -565,6 +601,22 @@ class MatrixOperations
     static void Main()
     {
         MatrixOperations matrixOperations = new MatrixOperations();
+
+ 
+        double R = 5.0;  
+        double x0 = 0.0; 
+        double y0 = 0.0; 
+        double z0 = 0.0; 
+        int n = 10;    
+
+ 
+        double[,] coordinates = matrixOperations.cercle_plein(R, x0, y0, z0, n);
+
+        Console.WriteLine("Coordonnées du cercle plein :");
+        for (int i = 0; i < n; i++)
+        {
+            Console.WriteLine($"Point {i + 1}: X = {coordinates[i, 0]}, Y = {coordinates[i, 1]}, Z = {coordinates[i, 2]}");
+        }
 
         //int n = 27;
         //double a = 3.0; 
