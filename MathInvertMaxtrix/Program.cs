@@ -632,6 +632,49 @@ class MatrixOperations
 
         return result;
     }
+
+    public void mouvement(double m, double h, double[] forceSum, ref double[] pos, ref double[] speed, ref double[] rotAngle, ref double[] rotSpeed, double[,] forces, double[,] applicationPoints, double[] inertieCenter, double[,] inertieMatrix, ref double[,] points)
+    {
+        // Applique la translation (mouvement linéaire)
+        translation(m, h, forceSum, ref pos, ref speed);
+
+        // Applique la rotation (mouvement angulaire)
+        rotation(h, forces, applicationPoints, inertieCenter, inertieMatrix, ref rotAngle, ref rotSpeed);
+
+        // Applique la translation à tous les points du cylindre
+        for (int i = 0; i < points.GetLength(0); i++)
+        {
+            points[i, 0] += speed[0] * h;  // Déplacement en X
+            points[i, 1] += speed[1] * h;  // Déplacement en Y
+            points[i, 2] += speed[2] * h;  // Déplacement en Z
+        }
+
+        // Applique la rotation autour des 3 axes (X, Y, Z) à tous les points du cylindre
+        for (int i = 0; i < points.GetLength(0); i++)
+        {
+            double x = points[i, 0];
+            double y = points[i, 1];
+            double z = points[i, 2];
+
+            // Rotation autour de l'axe Z (plan XY)
+            double newX = x * Math.Cos(rotAngle[2]) - y * Math.Sin(rotAngle[2]);
+            double newY = x * Math.Sin(rotAngle[2]) + y * Math.Cos(rotAngle[2]);
+            double newZ = z;
+
+            // Rotation autour de l'axe X (affecte Y et Z)
+            y = newY * Math.Cos(rotAngle[0]) - newZ * Math.Sin(rotAngle[0]);
+            z = newY * Math.Sin(rotAngle[0]) + newZ * Math.Cos(rotAngle[0]);
+
+            // Rotation autour de l'axe Y (affecte X et Z)
+            x = newX * Math.Cos(rotAngle[1]) + z * Math.Sin(rotAngle[1]);
+            z = -newX * Math.Sin(rotAngle[1]) + z * Math.Cos(rotAngle[1]);
+
+            // Met à jour les coordonnées du point
+            points[i, 0] = x;
+            points[i, 1] = y;
+            points[i, 2] = z;
+        }
+    }
 }
 
     class Program
@@ -640,13 +683,62 @@ class MatrixOperations
     {
         MatrixOperations matrixOperations = new MatrixOperations();
 
-        //double R = 5.0;  
-        //double h = 10.0; 
-        //double x0 = 0.0; 
-        //double y0 = 0.0; 
-        //double z0 = 0.0; 
-        //int n = 10;      
-        //int m = 5;       
+
+
+        // Définition des paramètres du cylindre
+        double R = 5.0; // Rayon du cylindre
+        double h = 10.0; // Hauteur du cylindre
+        double x0 = 0.0, y0 = 0.0, z0 = 0.0; // Position de départ (x0, y0, z0)
+        int n = 10; // Nombre de points sur la base (discrétisation autour de l'axe)
+        int m = 5;  // Nombre de sections en hauteur
+
+        double[,] points = matrixOperations.cylindre_plein(R, h, x0, y0, z0, n, m);
+
+        // Paramètres de mouvement
+        double mMass = 1.0; // Masse (en kg)
+        double hTimeStep = 0.1; // Pas de temps (en secondes)
+        double[] forceSum = { 0.0, 0.0, -9.81 }; // Force de gravité (mouvement dans la direction Z)
+        double[] pos = { 0.0, 0.0, 0.0 }; // Position initiale
+        double[] speed = { 0.0, 0.0, 0.0 }; // Vitesse initiale
+        double[] rotAngle = { 0.0, 0.0, 0.0 }; // Angles de rotation initiaux
+        double[] rotSpeed = { 0.0, 0.0, 0.0 }; // Vitesse angulaire initiale
+
+        // Forces et points d'application de forces (exemple fictif)
+        double[,] forces = new double[,] { { 0.0, 0.0, -9.81 } }; // Exemple : force de gravité
+        double[,] applicationPoints = new double[,] { { 0.0, 0.0, 0.0 } }; // Exemple : application au centre du cylindre
+        double[] inertieCenter = { 0.0, 0.0, 0.0 }; // Centre d'inertie (pour simplification)
+        double[,] inertieMatrix = new double[,] { { 1.0, 0.0, 0.0 }, { 0.0, 1.0, 0.0 }, { 0.0, 0.0, 1.0 } }; // Matrice d'inertie (identité pour simplification)
+
+        // Appel de la méthode mouvement pour appliquer la translation et la rotation
+        matrixOperations.mouvement(mMass, hTimeStep, forceSum, ref pos, ref speed, ref rotAngle, ref rotSpeed, forces, applicationPoints, inertieCenter, inertieMatrix, ref points);
+
+        // Affichage des nouvelles positions du cylindre après mouvement
+        Console.WriteLine("Positions après mouvement :");
+        for (int i = 0; i < points.GetLength(0); i++)
+        {
+            Console.WriteLine($"Point {i + 1}: x = {points[i, 0]}, y = {points[i, 1]}, z = {points[i, 2]}");
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //double R = 5.0;
+        //double h = 10.0;
+        //double x0 = 0.0;
+        //double y0 = 0.0;
+        //double z0 = 0.0;
+        //int n = 10;
+        //int m = 5;
 
         //double[,] coordinates = matrixOperations.cylindre_plein(R, h, x0, y0, z0, n, m);
 
